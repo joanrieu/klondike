@@ -29,8 +29,8 @@ const gos = new Set<GameObject>()
           faceUp: false
         },
         transform: {
-          x: Math.random() * 1024 | 0,
-          y: Math.random() * 768 | 0
+          x: -Infinity,
+          y: -Infinity
         }
       })
 }
