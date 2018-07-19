@@ -87,8 +87,8 @@ function updateCard(go: GameObject) {
     if (go.stack.spaced) {
       go.transform.y += 30
     } else {
-      go.transform.x += .1
-      go.transform.y += .2
+      go.transform.x += .2
+      go.transform.y += .4
     }
   }
 }
@@ -99,8 +99,11 @@ const canvas = document.getElementsByTagName("canvas")[0]
 const ctx = canvas.getContext("2d")!
 
 requestAnimationFrame(function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = "green"
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
   renderCards()
+
   requestAnimationFrame(render)
 })
 
@@ -115,8 +118,19 @@ function renderCards() {
 function renderCard(go: GameObject) {
   const { suit, rank, faceUp } = go.card!
   const { x, y } = go.transform!
-  ctx.clearRect(x, y, 100, 150)
+
+  ctx.fillStyle = faceUp ? "white" : "#EEE";
+  ctx.fillRect(x, y, 100, 150)
+
+  ctx.strokeStyle = "#CCC"
   ctx.strokeRect(x, y, 100, 150)
-  const text = faceUp ? rank + " of " + suit : "?"
-  ctx.fillText(text, x + 10, y + 20)
+
+  if (faceUp) {
+    const text = rank + " of " + suit
+    ctx.fillStyle =
+      suit === "SPADES" || suit === "CLUBS"
+        ? "black"
+        : "firebrick"
+    ctx.fillText(text, x + 10, y + 20)
+  }
 }
