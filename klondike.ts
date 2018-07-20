@@ -75,11 +75,11 @@ const gos = new Set<GameObject>()
 
 // UPDATE
 
-setInterval(function update() {
+function update() {
   for (const go of gos.values())
     if (go.card)
       updateCard(go)
-}, 10)
+}
 
 function updateCard(go: GameObject) {
   if (go.stack) {
@@ -99,9 +99,10 @@ const canvas = document.getElementsByTagName("canvas")[0]
 const ctx = canvas.getContext("2d")!
 
 requestAnimationFrame(function render() {
+  update()
+
   ctx.fillStyle = "green"
   ctx.fillRect(0, 0, canvas.width, canvas.height)
-
   renderCards()
 
   requestAnimationFrame(render)
@@ -126,11 +127,35 @@ function renderCard(go: GameObject) {
   ctx.strokeRect(x, y, 100, 150)
 
   if (faceUp) {
-    const text = rank + " of " + suit
-    ctx.fillStyle =
-      suit === "SPADES" || suit === "CLUBS"
-        ? "black"
-        : "firebrick"
-    ctx.fillText(text, x + 10, y + 20)
+    // color
+    const suitColor = ({
+      SPADES: "black",
+      HEARTS: "firebrick",
+      CLUBS: "black",
+      DIAMONDS: "firebrick"
+    } as { [key: string]: string })[suit]
+    ctx.fillStyle = suitColor
+
+    const xpad = 10, ypad = 23, ypadneg = 13;
+
+    // rank
+    ctx.font = "13pt sans"
+    ctx.textAlign = "left"
+    ctx.fillText("" + rank, x + xpad, y + ypad)
+    ctx.textAlign = "right"
+    ctx.fillText("" + rank, x + 100 - xpad, y + 150 - ypad + ypadneg)
+
+    // suit
+    const suitChar = ({
+      SPADES: "\u2660",
+      HEARTS: "\u2665",
+      CLUBS: "\u2663",
+      DIAMONDS: "\u2666"
+    } as { [key: string]: string })[suit]
+    ctx.font = "16pt sans"
+    ctx.textAlign = "right"
+    ctx.fillText(suitChar, x + 100 - xpad, y + ypad)
+    ctx.textAlign = "left"
+    ctx.fillText(suitChar, x + xpad, y + 150 - ypad + ypadneg)
   }
 }
