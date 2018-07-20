@@ -4,6 +4,9 @@ interface GameObject {
     rank: number,
     faceUp: boolean
   },
+  mouse?: {
+    pressed: boolean
+  },
   stack?: {
     previous: GameObject,
     spaced: boolean
@@ -17,6 +20,8 @@ interface GameObject {
 // INIT
 
 const gos = new Set<GameObject>()
+const canvas = document.getElementsByTagName("canvas")[0]
+const ctx = canvas.getContext("2d")!
 
 // create cards
 {
@@ -73,13 +78,31 @@ const gos = new Set<GameObject>()
   previous.card!.faceUp = true
 }
 
+// watch mouse events
+{
+  const go: GameObject = {
+    mouse: {
+      pressed: false
+    },
+    transform: {
+      x: -Infinity,
+      y: -Infinity
+    }
+  }
+  gos.add(go)
+  canvas.addEventListener("mousedown", () => go.mouse!.pressed = true)
+  canvas.addEventListener("mouseup", () => go.mouse!.pressed = false)
+  canvas.addEventListener("mousemove", ({ offsetX: x, offsetY: y }) => go.transform = { x, y })
+}
+
 // UPDATE
 
-function update() {
-  for (const go of gos.values())
+setInterval(function update() {
+  for (const go of gos.values()) {
     if (go.card)
       updateCard(go)
-}
+  }
+}, 13)
 
 function updateCard(go: GameObject) {
   if (go.stack) {
@@ -95,15 +118,12 @@ function updateCard(go: GameObject) {
 
 // RENDER
 
-const canvas = document.getElementsByTagName("canvas")[0]
-const ctx = canvas.getContext("2d")!
-
 requestAnimationFrame(function render() {
-  update()
-
   ctx.fillStyle = "green"
   ctx.fillRect(0, 0, canvas.width, canvas.height)
+
   renderCards()
+  renderMouse()
 
   requestAnimationFrame(render)
 })
@@ -173,5 +193,17 @@ function renderCard(go: GameObject) {
     ctx.textBaseline = "middle"
     ctx.textAlign = "center"
     ctx.fillText(largeSuitChar, x + width / 2, y + height / 2)
+  }
+}
+
+function renderMouse() {
+  for (const go of gos.values()) {
+    if (go.mouse) {
+      const { x, y } = go.transform!
+      const { pressed } = go.mouse!
+      const rad = 5
+      ctx.fillStyle = pressed ? "red" : "grey"
+      ctx.fillRect(x - rad, y - rad, 2 * rad, 2 * rad)
+    }
   }
 }
