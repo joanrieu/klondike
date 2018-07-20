@@ -120,11 +120,13 @@ function renderCard(go: GameObject) {
   const { suit, rank, faceUp } = go.card!
   const { x, y } = go.transform!
 
+  const width = 100, height = 150
+
   ctx.fillStyle = faceUp ? "white" : "#EEE";
-  ctx.fillRect(x, y, 100, 150)
+  ctx.fillRect(x, y, width, height)
 
   ctx.strokeStyle = "#CCC"
-  ctx.strokeRect(x, y, 100, 150)
+  ctx.strokeRect(x, y, width, height)
 
   if (faceUp) {
     // color
@@ -138,7 +140,6 @@ function renderCard(go: GameObject) {
     ctx.fillStyle = suitColor
     ctx.textBaseline = "alphabetic"
 
-    const width = 100, height = 150
     const xpad = 10, ypad = 23, ypadneg = 13;
 
     // rank
