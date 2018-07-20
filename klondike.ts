@@ -5,7 +5,8 @@ interface GameObject {
     faceUp: boolean
   },
   mouse?: {
-    pressed: boolean
+    pressed: boolean,
+    target?: GameObject
   },
   stack?: {
     previous: GameObject,
@@ -13,7 +14,9 @@ interface GameObject {
   },
   transform?: {
     x: number,
-    y: number
+    y: number,
+    width: number,
+    height: number
   }
 }
 
@@ -35,7 +38,9 @@ const ctx = canvas.getContext("2d")!
         },
         transform: {
           x: -Infinity,
-          y: -Infinity
+          y: -Infinity,
+          width: 100,
+          height: 150
         }
       })
 }
@@ -47,7 +52,9 @@ const ctx = canvas.getContext("2d")!
     let previous: GameObject = {
       transform: {
         x: pile * 120 - 100,
-        y: 200
+        y: 200,
+        width: 100,
+        height: 150
       }
     }
     gos.add(previous)
@@ -64,7 +71,9 @@ const ctx = canvas.getContext("2d")!
   let previous: GameObject = {
     transform: {
       x: 20,
-      y: 20
+      y: 20,
+      width: 100,
+      height: 150
     }
   }
   gos.add(previous)
@@ -86,13 +95,15 @@ const ctx = canvas.getContext("2d")!
     },
     transform: {
       x: -Infinity,
-      y: -Infinity
+      y: -Infinity,
+      width: 1,
+      height: 1
     }
   }
   gos.add(go)
   canvas.addEventListener("mousedown", () => go.mouse!.pressed = true)
   canvas.addEventListener("mouseup", () => go.mouse!.pressed = false)
-  canvas.addEventListener("mousemove", ({ offsetX: x, offsetY: y }) => go.transform = { x, y })
+  canvas.addEventListener("mousemove", ({ offsetX: x, offsetY: y }) => (go.transform!.x = x, go.transform!.y = y))
 }
 
 // UPDATE
@@ -101,6 +112,8 @@ setInterval(function update() {
   for (const go of gos.values()) {
     if (go.card)
       updateCard(go)
+    if (go.mouse)
+      updateMouse(go)
   }
 }, 13)
 
@@ -114,6 +127,18 @@ function updateCard(go: GameObject) {
       go.transform.y += .4
     }
   }
+}
+
+function updateMouse(go: GameObject) {
+  const { pressed } = go.mouse!
+  const { x, y } = go.transform!
+  const cards = [...gos.values()]
+    .filter(go => go.card)
+    .filter(go => go.transform!.x <= x && x < go.transform!.x + go.transform!.width)
+    .filter(go => go.transform!.y <= y && y < go.transform!.y + go.transform!.height)
+    .sort((a, b) => a.transform!.y - b.transform!.y)
+  const card = cards.pop()
+  go.mouse!.target = card
 }
 
 // RENDER
@@ -138,9 +163,7 @@ function renderCards() {
 
 function renderCard(go: GameObject) {
   const { suit, rank, faceUp } = go.card!
-  const { x, y } = go.transform!
-
-  const width = 100, height = 150
+  const { x, y, width, height } = go.transform!
 
   ctx.fillStyle = faceUp ? "white" : "#EEE";
   ctx.fillRect(x, y, width, height)
@@ -200,10 +223,17 @@ function renderMouse() {
   for (const go of gos.values()) {
     if (go.mouse) {
       const { x, y } = go.transform!
-      const { pressed } = go.mouse!
+      const { pressed, target } = go.mouse!
       const rad = 5
+
       ctx.fillStyle = pressed ? "red" : "grey"
       ctx.fillRect(x - rad, y - rad, 2 * rad, 2 * rad)
+
+      ctx.font = "8pt sans"
+      ctx.fillStyle = "blue"
+      ctx.textAlign = "left"
+      if (target && target.card)
+        ctx.fillText(target.card.rank + " of " + target.card.suit, x + 10, y)
     }
   }
 }
