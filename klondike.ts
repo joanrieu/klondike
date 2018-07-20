@@ -58,7 +58,7 @@ const gos = new Set<GameObject>()
   }
   let previous: GameObject = {
     transform: {
-      x: 7 * 120 - 100,
+      x: 20,
       y: 20
     }
   }
