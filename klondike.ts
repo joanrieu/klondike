@@ -6,7 +6,16 @@ interface GameObject {
   },
   mouse?: {
     pressed: boolean,
-    target?: GameObject
+    targets: {
+      card?: GameObject,
+      slot?: GameObject
+    }
+  },
+  slot?: {
+    kind: "pile",
+    pile: number
+  } | {
+    kind: "stock"
   },
   stack?: {
     previous: GameObject,
@@ -50,11 +59,15 @@ const ctx = canvas.getContext("2d")!
   const shuffledDeck = [...gos.values()].sort((a, b) => Math.random() - .5)
   for (let pile = 1; pile <= 7; ++pile) {
     let previous: GameObject = {
+      slot: {
+        kind: "pile",
+        pile
+      },
       transform: {
         x: pile * 120 - 100,
         y: 200,
         width: 100,
-        height: 150
+        height: Infinity
       }
     }
     gos.add(previous)
@@ -69,6 +82,9 @@ const ctx = canvas.getContext("2d")!
     previous.card!.faceUp = true
   }
   let previous: GameObject = {
+    slot: {
+      kind: "stock"
+    },
     transform: {
       x: 20,
       y: 20,
@@ -91,7 +107,8 @@ const ctx = canvas.getContext("2d")!
 {
   const go: GameObject = {
     mouse: {
-      pressed: false
+      pressed: false,
+      targets: {}
     },
     transform: {
       x: -Infinity,
@@ -119,12 +136,13 @@ setInterval(function update() {
 
 function updateCard(go: GameObject) {
   if (go.stack) {
-    go.transform = { ...go.stack.previous.transform! }
+    const { x: px, y: py } = go.stack.previous.transform!
     if (go.stack.spaced) {
-      go.transform.y += 30
+      go.transform!.x = px
+      go.transform!.y = py + 30
     } else {
-      go.transform.x += .2
-      go.transform.y += .4
+      go.transform!.x = px + .2
+      go.transform!.y = py + .4
     }
   }
 }
@@ -133,12 +151,13 @@ function updateMouse(go: GameObject) {
   const { pressed } = go.mouse!
   const { x, y } = go.transform!
   const cards = [...gos.values()]
-    .filter(go => go.card)
+    .filter(go => go.card || go.slot)
     .filter(go => go.transform!.x <= x && x < go.transform!.x + go.transform!.width)
     .filter(go => go.transform!.y <= y && y < go.transform!.y + go.transform!.height)
     .sort((a, b) => a.transform!.y - b.transform!.y)
-  const card = cards.pop()
-  go.mouse!.target = card
+  const card = cards.filter(go => go.card).pop()
+  const slot = cards.filter(go => go.slot).pop()
+  go.mouse!.targets = { card, slot }
 }
 
 // RENDER
@@ -223,7 +242,7 @@ function renderMouse() {
   for (const go of gos.values()) {
     if (go.mouse) {
       const { x, y } = go.transform!
-      const { pressed, target } = go.mouse!
+      const { pressed, targets } = go.mouse!
       const rad = 5
 
       ctx.fillStyle = pressed ? "red" : "grey"
@@ -232,8 +251,10 @@ function renderMouse() {
       ctx.font = "8pt sans"
       ctx.fillStyle = "blue"
       ctx.textAlign = "left"
-      if (target && target.card)
-        ctx.fillText(target.card.rank + " of " + target.card.suit, x + 10, y)
+      if (targets.card)
+        ctx.fillText(targets.card.card!.rank + " of " + targets.card.card!.suit, x + 10, y)
+      if (targets.slot)
+        ctx.fillText(Object.values(targets.slot.slot!).join(" "), x + 10, y - 15)
     }
   }
 }
