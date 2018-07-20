@@ -134,8 +134,11 @@ function renderCard(go: GameObject) {
       CLUBS: "black",
       DIAMONDS: "firebrick"
     } as { [key: string]: string })[suit]
-    ctx.fillStyle = suitColor
 
+    ctx.fillStyle = suitColor
+    ctx.textBaseline = "alphabetic"
+
+    const width = 100, height = 150
     const xpad = 10, ypad = 23, ypadneg = 13;
 
     // rank
@@ -143,7 +146,7 @@ function renderCard(go: GameObject) {
     ctx.textAlign = "left"
     ctx.fillText("" + rank, x + xpad, y + ypad)
     ctx.textAlign = "right"
-    ctx.fillText("" + rank, x + 100 - xpad, y + 150 - ypad + ypadneg)
+    ctx.fillText("" + rank, x + width - xpad, y + height - ypad + ypadneg)
 
     // suit
     const suitChar = ({
@@ -154,8 +157,20 @@ function renderCard(go: GameObject) {
     } as { [key: string]: string })[suit]
     ctx.font = "16pt sans"
     ctx.textAlign = "right"
-    ctx.fillText(suitChar, x + 100 - xpad, y + ypad)
+    ctx.fillText(suitChar, x + width - xpad, y + ypad)
     ctx.textAlign = "left"
-    ctx.fillText(suitChar, x + xpad, y + 150 - ypad + ypadneg)
+    ctx.fillText(suitChar, x + xpad, y + height - ypad + ypadneg)
+
+    // large suit symbol
+    const largeSuitChar = ({
+      SPADES: "\u2664",
+      HEARTS: "\u2661",
+      CLUBS: "\u2667",
+      DIAMONDS: "\u2662"
+    } as { [key: string]: string })[suit]
+    ctx.font = "30pt sans"
+    ctx.textBaseline = "middle"
+    ctx.textAlign = "center"
+    ctx.fillText(largeSuitChar, x + width / 2, y + height / 2)
   }
 }
