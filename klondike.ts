@@ -215,8 +215,12 @@ function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
     if (!newSlot || newSlot === oldSlot)
       throw MOVE_CANCELLED
 
-    // put card in new stack
+    // check if rules allow the move
     const topCardOfNewSlot = findTopCardOfSlot(newSlot)
+    if (!isStackingAllowed(topCardOfNewSlot, grabbedCard))
+      throw MOVE_CANCELLED
+
+    // put card in new stack
     grabbedCard.stack = {
       previous: topCardOfNewSlot,
       spaced: newSlot.slot!.kind === "pile" && topCardOfNewSlot !== newSlot
@@ -256,6 +260,22 @@ function findTopCardOfSlot(slot: GameObject) {
     slotTop = above
   }
   return slotTop
+}
+
+function isStackingAllowed(bottomCard: GameObject, topCard: GameObject) {
+  // check decreasing rank and alternating color
+  return topCard.card!.rank + 1 === bottomCard.card!.rank
+    && isRedCard(bottomCard) !== isRedCard(topCard)
+}
+
+function isRedCard(card: GameObject) {
+  switch (card.card!.suit) {
+    case "HEARTS":
+    case "DIAMONDS":
+      return true
+    default:
+      return false
+  }
 }
 
 // RENDER
