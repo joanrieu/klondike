@@ -4,6 +4,11 @@ interface GameObject {
     rank: number,
     faceUp: boolean
   },
+  grab?: {
+    dx: number,
+    dy: number,
+    stack: GameObject["stack"] & {}
+  },
   mouse?: {
     pressed: boolean,
     wasPressed: boolean,
@@ -68,7 +73,7 @@ const ctx = canvas.getContext("2d")!
         x: pile * 120 - 50,
         y: 300,
         width: 100,
-        height: Infinity
+        height: 150
       }
     }
     gos.add(previous)
@@ -131,6 +136,8 @@ setInterval(function update() {
   for (const go of gos.values()) {
     if (go.card)
       updateCard(go)
+    if (go.grab)
+      updateGrab(go)
     if (go.mouse)
       updateMouse(go)
   }
@@ -147,6 +154,12 @@ function updateCard(go: GameObject) {
       go.transform!.y = py + .4
     }
   }
+}
+
+function updateGrab(go: GameObject) {
+  const mouse = [...gos.values()].find(go => !!go.mouse)!
+  go.transform!.x = mouse.transform!.x + go.grab!.dx
+  go.transform!.y = mouse.transform!.y + go.grab!.dy
 }
 
 function updateMouse(go: GameObject) {
@@ -166,10 +179,31 @@ function updateMouse(go: GameObject) {
   const changed = pressed !== wasPressed
   go.mouse!.wasPressed = go.mouse!.pressed
   if (changed) {
-    if (pressed && card)
-      card.stack = { previous: go, spaced: false }
-    else if (!pressed && card)
+    const grab = [...gos.values()].find(go => !!go.grab)
+    if (pressed && card && !grab) {
+      card.grab = {
+        dx: card.transform!.x - x,
+        dy: card.transform!.y - y,
+        stack: card.stack!
+      }
       delete card.stack
+    } else if (!pressed && grab) {
+      try {
+        if (!slot)
+          throw new Error("no slot chosen, move cancelled")
+        let oldSlot = grab.grab!.stack.previous
+        while (oldSlot.stack)
+          oldSlot = oldSlot.stack.previous
+        if (oldSlot === slot)
+          throw new Error("old slot chosen, move cancelled")
+        // todo
+      } catch (error) {
+        if (!error.message.match(/move cancelled/))
+          throw error
+        grab.stack = grab.grab!.stack
+        delete grab.grab
+      }
+    }
   }
 }
 
