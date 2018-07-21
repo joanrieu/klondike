@@ -201,33 +201,52 @@ function updateMouse(go: GameObject) {
       }
       delete card.stack
     } else if (!pressed && grab) {
-      try {
-        if (!slot)
-          throw new Error("no slot chosen, move cancelled")
-        let oldSlot = grab.grab!.stack.previous
-        while (oldSlot.stack)
-          oldSlot = oldSlot.stack.previous
-        if (oldSlot === slot)
-          throw new Error("old slot chosen, move cancelled")
-        const slotTop = findSlotTop(slot)
-        grab.stack = {
-          previous: slotTop,
-          spaced: slot.slot!.kind === "pile" && slotTop !== slot
-        }
-        if (grab.grab!.stack.previous.card)
-          grab.grab!.stack.previous.card!.faceUp = true
-        delete grab.grab
-      } catch (error) {
-        if (!error.message.match(/move cancelled/))
-          throw error
-        grab.stack = grab.grab!.stack
-        delete grab.grab
-      }
+      moveGrabbedCards(grab, slot)
     }
   }
 }
 
-function findSlotTop(slot: GameObject) {
+function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
+  const MOVE_CANCELLED = Symbol.for("move cancelled")
+  try {
+    // check if move target exists
+    const oldSlotTop = grabbedCard.grab!.stack.previous
+    const oldSlot = findSlotOfCard(oldSlotTop)
+    if (!newSlot || newSlot === oldSlot)
+      throw MOVE_CANCELLED
+
+    // put card in new stack
+    const topCardOfNewSlot = findTopCardOfSlot(newSlot)
+    grabbedCard.stack = {
+      previous: topCardOfNewSlot,
+      spaced: newSlot.slot!.kind === "pile" && topCardOfNewSlot !== newSlot
+    }
+
+    // show last card in origin slot
+    if (oldSlotTop.card)
+      oldSlotTop.card!.faceUp = true
+
+    // release card from grab
+    delete grabbedCard.grab
+  } catch (error) {
+    if (error !== MOVE_CANCELLED)
+      throw error
+
+    // put card back in old stack
+    grabbedCard.stack = grabbedCard.grab!.stack
+
+    delete grabbedCard.grab
+  }
+}
+
+function findSlotOfCard(card: GameObject) {
+  let slot = card
+  while (slot.stack)
+    slot = slot.stack.previous
+  return slot
+}
+
+function findTopCardOfSlot(slot: GameObject) {
   let slotTop = slot
   while (true) {
     const above = [...gos.values()]
