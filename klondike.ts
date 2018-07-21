@@ -165,13 +165,26 @@ function updateGrab(go: GameObject) {
 function updateMouse(go: GameObject) {
   // detect card & slot under mouse
   const { x, y } = go.transform!
-  const cards = [...gos.values()]
-    .filter(go => go.card || go.slot)
-    .filter(go => go.transform!.x - go.transform!.width / 2 <= x && x < go.transform!.x + go.transform!.width / 2)
-    .filter(go => go.transform!.y - go.transform!.height / 2 <= y && y < go.transform!.y + go.transform!.height / 2)
+  const card = [...gos.values()]
+    .filter(go =>
+      go.card
+        && x >= go.transform!.x - go.transform!.width / 2
+        && x < go.transform!.x + go.transform!.width / 2
+        && y >= go.transform!.y - go.transform!.height / 2
+        && y < go.transform!.y + go.transform!.height / 2
+    )
     .sort((a, b) => a.transform!.y - b.transform!.y)
-  const card = cards.filter(go => go.card).pop()
-  const slot = cards.filter(go => go.slot).pop()
+    .pop()
+  const slot = [...gos.values()]
+    .filter(go =>
+      go.slot
+        && x >= go.transform!.x - go.transform!.width / 2
+        && x < go.transform!.x + go.transform!.width / 2
+        && y >= go.transform!.y - go.transform!.height / 2
+        && (go.slot!.kind === "pile" || y < go.transform!.y + go.transform!.height / 2)
+    )
+    .sort((a, b) => a.transform!.y - b.transform!.y)
+    .pop()
   go.mouse!.targets = { card, slot }
 
   // move card when pressed
@@ -196,7 +209,14 @@ function updateMouse(go: GameObject) {
           oldSlot = oldSlot.stack.previous
         if (oldSlot === slot)
           throw new Error("old slot chosen, move cancelled")
-        // todo
+        const slotTop = findSlotTop(slot)
+        grab.stack = {
+          previous: slotTop,
+          spaced: slot.slot!.kind === "pile" && slotTop !== slot
+        }
+        if (grab.grab!.stack.previous.card)
+          grab.grab!.stack.previous.card!.faceUp = true
+        delete grab.grab
       } catch (error) {
         if (!error.message.match(/move cancelled/))
           throw error
@@ -205,6 +225,18 @@ function updateMouse(go: GameObject) {
       }
     }
   }
+}
+
+function findSlotTop(slot: GameObject) {
+  let slotTop = slot
+  while (true) {
+    const above = [...gos.values()]
+      .find(go => !!(go.stack && go.stack.previous === slotTop))
+    if (!above)
+      break
+    slotTop = above
+  }
+  return slotTop
 }
 
 // RENDER
