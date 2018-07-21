@@ -6,6 +6,7 @@ interface GameObject {
   },
   mouse?: {
     pressed: boolean,
+    wasPressed: boolean,
     targets: {
       card?: GameObject,
       slot?: GameObject
@@ -64,8 +65,8 @@ const ctx = canvas.getContext("2d")!
         pile
       },
       transform: {
-        x: pile * 120 - 100,
-        y: 200,
+        x: pile * 120 - 50,
+        y: 300,
         width: 100,
         height: Infinity
       }
@@ -86,8 +87,8 @@ const ctx = canvas.getContext("2d")!
       kind: "stock"
     },
     transform: {
-      x: 20,
-      y: 20,
+      x: 70,
+      y: 100,
       width: 100,
       height: 150
     }
@@ -108,6 +109,7 @@ const ctx = canvas.getContext("2d")!
   const go: GameObject = {
     mouse: {
       pressed: false,
+      wasPressed: false,
       targets: {}
     },
     transform: {
@@ -148,16 +150,27 @@ function updateCard(go: GameObject) {
 }
 
 function updateMouse(go: GameObject) {
-  const { pressed } = go.mouse!
+  // detect card & slot under mouse
   const { x, y } = go.transform!
   const cards = [...gos.values()]
     .filter(go => go.card || go.slot)
-    .filter(go => go.transform!.x <= x && x < go.transform!.x + go.transform!.width)
-    .filter(go => go.transform!.y <= y && y < go.transform!.y + go.transform!.height)
+    .filter(go => go.transform!.x - go.transform!.width / 2 <= x && x < go.transform!.x + go.transform!.width / 2)
+    .filter(go => go.transform!.y - go.transform!.height / 2 <= y && y < go.transform!.y + go.transform!.height / 2)
     .sort((a, b) => a.transform!.y - b.transform!.y)
   const card = cards.filter(go => go.card).pop()
   const slot = cards.filter(go => go.slot).pop()
   go.mouse!.targets = { card, slot }
+
+  // move card when pressed
+  const { pressed, wasPressed } = go.mouse!
+  const changed = pressed !== wasPressed
+  go.mouse!.wasPressed = go.mouse!.pressed
+  if (changed) {
+    if (pressed && card)
+      card.stack = { previous: go, spaced: false }
+    else if (!pressed && card)
+      delete card.stack
+  }
 }
 
 // RENDER
@@ -183,12 +196,13 @@ function renderCards() {
 function renderCard(go: GameObject) {
   const { suit, rank, faceUp } = go.card!
   const { x, y, width, height } = go.transform!
+  const halfwidth = width / 2, halfheight = height / 2
 
   ctx.fillStyle = faceUp ? "white" : "#EEE";
-  ctx.fillRect(x, y, width, height)
+  ctx.fillRect(x - halfwidth, y - halfheight, width, height)
 
   ctx.strokeStyle = "#CCC"
-  ctx.strokeRect(x, y, width, height)
+  ctx.strokeRect(x - halfwidth, y - halfheight, width, height)
 
   if (faceUp) {
     // color
@@ -207,9 +221,9 @@ function renderCard(go: GameObject) {
     // rank
     ctx.font = "13pt sans"
     ctx.textAlign = "left"
-    ctx.fillText("" + rank, x + xpad, y + ypad)
+    ctx.fillText("" + rank, x - halfwidth + xpad, y - halfheight + ypad)
     ctx.textAlign = "right"
-    ctx.fillText("" + rank, x + width - xpad, y + height - ypad + ypadneg)
+    ctx.fillText("" + rank, x + halfwidth - xpad, y + halfheight - ypad + ypadneg)
 
     // suit
     const suitChar = ({
@@ -220,9 +234,9 @@ function renderCard(go: GameObject) {
     } as { [key: string]: string })[suit]
     ctx.font = "16pt sans"
     ctx.textAlign = "right"
-    ctx.fillText(suitChar, x + width - xpad, y + ypad)
+    ctx.fillText(suitChar, x + halfwidth - xpad, y - halfheight + ypad)
     ctx.textAlign = "left"
-    ctx.fillText(suitChar, x + xpad, y + height - ypad + ypadneg)
+    ctx.fillText(suitChar, x - halfwidth + xpad, y + halfheight - ypad + ypadneg)
 
     // large suit symbol
     const largeSuitChar = ({
@@ -234,7 +248,7 @@ function renderCard(go: GameObject) {
     ctx.font = "30pt sans"
     ctx.textBaseline = "middle"
     ctx.textAlign = "center"
-    ctx.fillText(largeSuitChar, x + width / 2, y + height / 2)
+    ctx.fillText(largeSuitChar, x, y)
   }
 }
 
