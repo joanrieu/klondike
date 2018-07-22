@@ -22,6 +22,9 @@ interface GameObject {
     pile: number
   } | {
     kind: "stock"
+  } | {
+    kind: "foundation",
+    foundation: number
   },
   stack?: {
     previous: GameObject,
@@ -107,6 +110,25 @@ const ctx = canvas.getContext("2d")!
     previous = card
   }
   previous.card!.faceUp = true
+}
+
+// create foundation
+{
+  for (let foundation = 1; foundation <= 4; ++foundation) {
+    const go: GameObject = {
+      slot: {
+        kind: "foundation",
+        foundation
+      },
+      transform: {
+        x: 120 * foundation + 310,
+        y: 100,
+        width: 100,
+        height: 150
+      }
+    }
+    gos.add(go)
+  }
 }
 
 // watch mouse events
@@ -220,8 +242,24 @@ function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
 
     // check if rules allow the move
     const topCardOfNewSlot = findTopCardOfSlot(newSlot)
-    if (!isStackingAllowed(topCardOfNewSlot, grabbedCard))
-      throw MOVE_CANCELLED
+    switch (newSlot.slot!.kind) {
+      case "pile":
+        if (topCardOfNewSlot.card && !isStackingAllowed(topCardOfNewSlot, grabbedCard))
+          throw MOVE_CANCELLED
+        break
+      case "stock":
+        throw MOVE_CANCELLED
+      case "foundation":
+        if (topCardOfNewSlot.card) {
+          if (grabbedCard.card!.suit !== topCardOfNewSlot.card!.suit
+            || grabbedCard.card!.rank !== topCardOfNewSlot.card!.rank + 1)
+            throw MOVE_CANCELLED
+        } else {
+          if (grabbedCard.card!.rank !== 1)
+            throw MOVE_CANCELLED
+        }
+        break
+    }
 
     // put card in new stack
     grabbedCard.stack = {
