@@ -193,14 +193,14 @@ function updateMouse(go: GameObject) {
   go.mouse!.wasPressed = go.mouse!.pressed
   if (changed) {
     const grab = [...gos.values()].find(go => !!go.grab)
-    if (pressed && card && !grab) {
+    if (!grab && pressed && card && card.card!.faceUp) {
       card.grab = {
         dx: card.transform!.x - x,
         dy: card.transform!.y - y,
         stack: card.stack!
       }
       delete card.stack
-    } else if (!pressed && grab) {
+    } else if (grab && !pressed) {
       moveGrabbedCards(grab, slot)
     }
   }
