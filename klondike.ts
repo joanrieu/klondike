@@ -387,10 +387,16 @@ requestAnimationFrame(function render() {
 function renderCards() {
   const sortedCards = [...gos.values()]
     .filter(go => go.card)
-    .sort((a, b) =>
-      (findSlotOfCard(a).grab && !findSlotOfCard(b).grab)
-        ? 1
-        : (a.transform!.y - b.transform!.y))
+    .sort((a, b) => {
+      const grabA = findSlotOfCard(a).grab ? 1 : 0
+      const grabB = findSlotOfCard(b).grab ? 1 : 0
+      if (grabA === grabB)
+        // both grabbed or none grabbed
+        return a.transform!.y - b.transform!.y
+      else
+        // one grabbed (foreground) and one normal (background)
+        return grabA - grabB
+    })
   for (const go of sortedCards)
     renderCard(go)
 }
