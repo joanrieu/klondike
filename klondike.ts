@@ -281,8 +281,7 @@ function isRedCard(card: GameObject) {
 // RENDER
 
 requestAnimationFrame(function render() {
-  ctx.fillStyle = "green"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   renderCards()
   renderMouse()
