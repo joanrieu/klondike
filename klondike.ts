@@ -235,15 +235,36 @@ function updateMouse(go: GameObject) {
   go.mouse!.wasPressed = go.mouse!.pressed
   if (changed) {
     const grabbedCard = [...gos.values()].find(go => !!go.grab)
-    if (!grabbedCard && pressed && card) {
-      if (card.card!.faceUp
-        || (findSlotOfCard(card).slot!.kind === "stock" && card === findTopCardOfSlot(card))) {
-        card.grab = {
-          dx: card.transform!.x - x,
-          dy: card.transform!.y - y,
-          stack: card.stack!
+    if (!grabbedCard && pressed) {
+      if (card) {
+        if (card.card!.faceUp) {
+          // start moving a card
+          card.grab = {
+            dx: card.transform!.x - x,
+            dy: card.transform!.y - y,
+            stack: card.stack!
+          }
+          delete card.stack
+        } else if (findSlotOfCard(card).slot!.kind === "stock"
+          && card === findTopCardOfSlot(card)) {
+          // reveal discarded card
+          card.card!.faceUp = true
+          card.stack!.previous = findTopCardOfSlot(findDiscardSlot())
         }
-        delete card.stack
+      } else if (slot && slot.slot!.kind === "stock") {
+        // flip discard pile and move it to stock
+        let stockCard = slot
+        let discardedCard = findTopCardOfSlot(findDiscardSlot())
+        while (discardedCard.card) {
+          const { previous } = discardedCard.stack!
+          discardedCard.card.faceUp = false
+          discardedCard.stack = {
+            previous: stockCard,
+            spaced: false
+          }
+          stockCard = discardedCard
+          discardedCard = previous
+        }
       }
     } else if (grabbedCard && !pressed) {
       moveGrabbedCards(grabbedCard, slot)
@@ -251,12 +272,16 @@ function updateMouse(go: GameObject) {
   }
 }
 
+function findDiscardSlot() {
+  return [...gos.values()].find(go => !!go.slot && go.slot.kind === "discard")!
+}
+
 function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
   const MOVE_CANCELLED = Symbol.for("move cancelled")
   try {
     // check if move target exists
-    const oldSlotTop = grabbedCard.grab!.stack.previous
-    const oldSlot = findSlotOfCard(oldSlotTop)
+    const topCardOfOldSlot = grabbedCard.grab!.stack.previous
+    const oldSlot = findSlotOfCard(topCardOfOldSlot)
     if (!newSlot || newSlot === oldSlot)
       throw MOVE_CANCELLED
 
@@ -271,9 +296,7 @@ function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
       case "stock":
         throw MOVE_CANCELLED
       case "discard":
-        if (oldSlot.slot!.kind !== "stock")
-          throw MOVE_CANCELLED
-        break
+        throw MOVE_CANCELLED
       case "foundation":
         if (oldSlot.slot!.kind === "stock")
           throw MOVE_CANCELLED
@@ -294,13 +317,9 @@ function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
       spaced: newSlot.slot!.kind === "pile" && topCardOfNewSlot !== newSlot
     }
 
-    // reveal discarded card
-    if (newSlot.slot!.kind === "discard")
-      grabbedCard.card!.faceUp = true
-
     // show last card in origin slot
-    if (oldSlotTop.card && oldSlot.slot!.kind !== "stock")
-      oldSlotTop.card!.faceUp = true
+    if (topCardOfOldSlot.card && oldSlot.slot!.kind !== "stock")
+      topCardOfOldSlot.card!.faceUp = true
 
     // release card from grab
     delete grabbedCard.grab
@@ -325,13 +344,16 @@ function findSlotOfCard(card: GameObject) {
 function findTopCardOfSlot(slot: GameObject) {
   let slotTop = slot
   while (true) {
-    const above = [...gos.values()]
-      .find(go => !!(go.stack && go.stack.previous === slotTop))
+    const above = findCardAbove(slotTop)
     if (!above)
       break
     slotTop = above
   }
   return slotTop
+}
+
+function findCardAbove(card: GameObject) {
+  return [...gos.values()].find(go => !!(go.stack && go.stack.previous === card))
 }
 
 function isStackingAllowed(bottomCard: GameObject, topCard: GameObject) {
