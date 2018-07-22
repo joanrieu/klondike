@@ -127,7 +127,10 @@ const ctx = canvas.getContext("2d")!
   gos.add(go)
   canvas.addEventListener("mousedown", () => go.mouse!.pressed = true)
   canvas.addEventListener("mouseup", () => go.mouse!.pressed = false)
-  canvas.addEventListener("mousemove", ({ offsetX: x, offsetY: y }) => (go.transform!.x = x, go.transform!.y = y))
+  canvas.addEventListener("mousemove", ({ offsetX: x, offsetY: y }) => {
+    go.transform!.x = x * (canvas.width / canvas.offsetWidth)
+    go.transform!.y = y * (canvas.height / canvas.offsetHeight)
+  })
 }
 
 // UPDATE
