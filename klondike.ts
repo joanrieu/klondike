@@ -234,8 +234,8 @@ function updateMouse(go: GameObject) {
   const changed = pressed !== wasPressed
   go.mouse!.wasPressed = go.mouse!.pressed
   if (changed) {
-    const grab = [...gos.values()].find(go => !!go.grab)
-    if (!grab && pressed && card) {
+    const grabbedCard = [...gos.values()].find(go => !!go.grab)
+    if (!grabbedCard && pressed && card) {
       if (card.card!.faceUp
         || (findSlotOfCard(card).slot!.kind === "stock" && card === findTopCardOfSlot(card))) {
         card.grab = {
@@ -245,8 +245,8 @@ function updateMouse(go: GameObject) {
         }
         delete card.stack
       }
-    } else if (grab && !pressed) {
-      moveGrabbedCards(grab, slot)
+    } else if (grabbedCard && !pressed) {
+      moveGrabbedCards(grabbedCard, slot)
     }
   }
 }
@@ -365,7 +365,10 @@ requestAnimationFrame(function render() {
 function renderCards() {
   const sortedCards = [...gos.values()]
     .filter(go => go.card)
-    .sort((a, b) => a.transform!.y - b.transform!.y)
+    .sort((a, b) =>
+      (findSlotOfCard(a).grab && !findSlotOfCard(b).grab)
+        ? 1
+        : (a.transform!.y - b.transform!.y))
   for (const go of sortedCards)
     renderCard(go)
 }
