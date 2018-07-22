@@ -283,6 +283,7 @@ function isRedCard(card: GameObject) {
 requestAnimationFrame(function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+  renderSlots()
   renderCards()
   renderMouse()
 
@@ -375,4 +376,18 @@ function renderMouse() {
         ctx.fillText(Object.values(targets.slot.slot!).join(" "), x + 10, y - 15)
     }
   }
+}
+
+function renderSlots() {
+  for (const go of gos.values())
+    if (go.slot)
+      renderSlot(go)
+}
+
+function renderSlot(go: GameObject) {
+  const { x, y, width, height } = go.transform!
+  const halfwidth = width / 2, halfheight = height / 2
+
+  ctx.strokeStyle = "#CCC"
+  ctx.strokeRect(x - halfwidth, y - halfheight, width, height)
 }
