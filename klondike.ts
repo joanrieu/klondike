@@ -23,6 +23,8 @@ interface GameObject {
   } | {
     kind: "stock"
   } | {
+    kind: "discard"
+  } | {
     kind: "foundation",
     foundation: number
   },
@@ -109,7 +111,22 @@ const ctx = canvas.getContext("2d")!
     }
     previous = card
   }
-  previous.card!.faceUp = true
+}
+
+// create discard slot
+{
+  const go: GameObject = {
+    slot: {
+      kind: "discard"
+    },
+    transform: {
+      x: 190,
+      y: 100,
+      width: 100,
+      height: 150
+    }
+  }
+  gos.add(go)
 }
 
 // create foundation
@@ -218,13 +235,16 @@ function updateMouse(go: GameObject) {
   go.mouse!.wasPressed = go.mouse!.pressed
   if (changed) {
     const grab = [...gos.values()].find(go => !!go.grab)
-    if (!grab && pressed && card && card.card!.faceUp) {
-      card.grab = {
-        dx: card.transform!.x - x,
-        dy: card.transform!.y - y,
-        stack: card.stack!
+    if (!grab && pressed && card) {
+      if (card.card!.faceUp
+        || (findSlotOfCard(card).slot!.kind === "stock" && card === findTopCardOfSlot(card))) {
+        card.grab = {
+          dx: card.transform!.x - x,
+          dy: card.transform!.y - y,
+          stack: card.stack!
+        }
+        delete card.stack
       }
-      delete card.stack
     } else if (grab && !pressed) {
       moveGrabbedCards(grab, slot)
     }
@@ -244,12 +264,19 @@ function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
     const topCardOfNewSlot = findTopCardOfSlot(newSlot)
     switch (newSlot.slot!.kind) {
       case "pile":
-        if (topCardOfNewSlot.card && !isStackingAllowed(topCardOfNewSlot, grabbedCard))
+        if (oldSlot.slot!.kind === "stock"
+          || (topCardOfNewSlot.card && !isStackingAllowed(topCardOfNewSlot, grabbedCard)))
           throw MOVE_CANCELLED
         break
       case "stock":
         throw MOVE_CANCELLED
+      case "discard":
+        if (oldSlot.slot!.kind !== "stock")
+          throw MOVE_CANCELLED
+        break
       case "foundation":
+        if (oldSlot.slot!.kind === "stock")
+          throw MOVE_CANCELLED
         if (topCardOfNewSlot.card) {
           if (grabbedCard.card!.suit !== topCardOfNewSlot.card!.suit
             || grabbedCard.card!.rank !== topCardOfNewSlot.card!.rank + 1)
@@ -267,8 +294,12 @@ function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
       spaced: newSlot.slot!.kind === "pile" && topCardOfNewSlot !== newSlot
     }
 
+    // reveal discarded card
+    if (newSlot.slot!.kind === "discard")
+      grabbedCard.card!.faceUp = true
+
     // show last card in origin slot
-    if (oldSlotTop.card)
+    if (oldSlotTop.card && oldSlot.slot!.kind !== "stock")
       oldSlotTop.card!.faceUp = true
 
     // release card from grab
