@@ -459,7 +459,7 @@ function renderCard(go: GameObject) {
     const xpad = 10, ypad = 23, ypadneg = 13;
 
     // rank
-    const rankText = rank <= 10 ? "" + rank : ["J", "Q", "K"][rank - 11]
+    const rankText = rank === 1 ? "A" : rank <= 10 ? "" + rank : ["J", "Q", "K"][rank - 11]
     ctx.font = "13pt sans"
     ctx.textAlign = "left"
     ctx.fillText(rankText, x - halfwidth + xpad, y - halfheight + ypad)
