@@ -320,7 +320,9 @@ function moveGrabbedCards(grabbedCard: GameObject, newSlot?: GameObject) {
     switch (newSlot.slot!.kind) {
       case "pile":
         if (oldSlot.slot!.kind === "stock"
-          || (topCardOfNewSlot.card && !isStackingAllowed(topCardOfNewSlot, grabbedCard)))
+          || (topCardOfNewSlot.card
+            ? !isStackingAllowed(topCardOfNewSlot, grabbedCard)
+            : grabbedCard.card!.rank < 13))
           throw MOVE_CANCELLED
         break
       case "stock":
