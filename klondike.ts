@@ -204,12 +204,14 @@ const ctx = canvas.getContext("2d")!
 
 setInterval(function update() {
   for (const go of gos.values()) {
-    if (go.card)
-      updateCard(go)
     if (go.grab)
       updateGrab(go)
     if (go.mouse)
       updateMouse(go)
+  }
+  for (const go of gos.values()) {
+    if (go.card)
+      updateCard(go)
   }
 }, 13)
 
