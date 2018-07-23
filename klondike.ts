@@ -164,11 +164,39 @@ const ctx = canvas.getContext("2d")!
     }
   }
   gos.add(go)
-  canvas.addEventListener("mousedown", () => go.mouse!.pressed = true)
-  canvas.addEventListener("mouseup", () => go.mouse!.pressed = false)
-  canvas.addEventListener("mousemove", ({ offsetX: x, offsetY: y }) => {
-    go.transform!.x = x * (canvas.width / canvas.offsetWidth)
-    go.transform!.y = y * (canvas.height / canvas.offsetHeight)
+  canvas.addEventListener("mousedown", event => {
+    go.mouse!.pressed = true
+    event.preventDefault()
+  })
+  canvas.addEventListener("mouseup", event => {
+    go.mouse!.pressed = false
+    event.preventDefault()
+  })
+  canvas.addEventListener("mousemove", event => {
+    go.transform!.x = event.offsetX / canvas.offsetWidth * canvas.width
+    go.transform!.y = event.offsetY / canvas.offsetHeight * canvas.height
+    event.preventDefault()
+  })
+  canvas.addEventListener("touchstart", event => {
+    go.mouse!.pressed = true
+    const { left, top } = canvas.getBoundingClientRect()
+    go.transform!.x = (event.touches[0].clientX - left) / canvas.offsetWidth * canvas.width
+    go.transform!.y = (event.touches[0].clientY - top) / canvas.offsetHeight * canvas.height
+    event.preventDefault()
+  })
+  canvas.addEventListener("touchmove", event => {
+    const { left, top } = canvas.getBoundingClientRect()
+    go.transform!.x = (event.touches[0].clientX - left) / canvas.offsetWidth * canvas.width
+    go.transform!.y = (event.touches[0].clientY - top) / canvas.offsetHeight * canvas.height
+    event.preventDefault()
+  })
+  canvas.addEventListener("touchend", event => {
+    go.mouse!.pressed = false
+    event.preventDefault()
+  })
+  canvas.addEventListener("touchcancel", event => {
+    go.mouse!.pressed = false
+    event.preventDefault()
   })
 }
 
@@ -379,7 +407,7 @@ requestAnimationFrame(function render() {
 
   renderSlots()
   renderCards()
-  renderMouse()
+  // renderMouse()
 
   requestAnimationFrame(render)
 })
