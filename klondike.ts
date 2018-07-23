@@ -455,11 +455,12 @@ function renderCard(go: GameObject) {
     const xpad = 10, ypad = 23, ypadneg = 13;
 
     // rank
+    const rankText = rank <= 10 ? "" + rank : ["J", "Q", "K"][rank - 11]
     ctx.font = "13pt sans"
     ctx.textAlign = "left"
-    ctx.fillText("" + rank, x - halfwidth + xpad, y - halfheight + ypad)
+    ctx.fillText(rankText, x - halfwidth + xpad, y - halfheight + ypad)
     ctx.textAlign = "right"
-    ctx.fillText("" + rank, x + halfwidth - xpad, y + halfheight - ypad + ypadneg)
+    ctx.fillText(rankText, x + halfwidth - xpad, y + halfheight - ypad + ypadneg)
 
     // suit
     const suitChar = ({
