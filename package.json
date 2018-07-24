@@ -1,0 +1,24 @@
+{
+  "name": "klondike",
+  "version": "1.0.0",
+  "description": "The classic game of Klondike",
+  "main": "index.js",
+  "dependencies": {
+    "typescript": "^2.9.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "compile": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joanrieu/klondike.git"
+  },
+  "keywords": [],
+  "author": "Joan Rieu <joan@joanrieu.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joanrieu/klondike/issues"
+  },
+  "homepage": "https://joanrieu.github.io/klondike"
+}
