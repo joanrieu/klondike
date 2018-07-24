@@ -4,6 +4,14 @@ interface GameObject {
     rank: number,
     faceUp: boolean
   },
+  firework?: {
+    life: number,
+    color: string,
+    ax: number,
+    ay: number,
+    vx: number,
+    vy: number
+  },
   grab?: {
     dx: number,
     dy: number,
@@ -213,6 +221,7 @@ function update() {
     if (go.card)
       updateCard(go)
   }
+  updateFireworks()
 }
 
 function updateCard(go: GameObject) {
@@ -226,6 +235,65 @@ function updateCard(go: GameObject) {
       go.transform!.y = py + .4
     }
   }
+}
+
+function updateFireworks() {
+  let found = false
+  for (const go of gos.values()) {
+    if (go.firework) {
+      found = true
+      updateFirework(go)
+    }
+  }
+  if (!found) {
+    const won = ![...gos.values()]
+      .filter(go => go.slot && go.slot.kind === "foundation")
+      .map(findTopCardOfSlot)
+      .find(go => !go.card || go.card.rank < 13)
+    if (won)
+      spawnFireworks()
+  }
+}
+
+function updateFirework(go: GameObject) {
+  if (go.firework!.life--) {
+    // gravity
+    go.firework!.ay += 0.001
+
+    // physics
+    go.firework!.vx += go.firework!.ax
+    go.transform!.x += go.firework!.vx
+    go.firework!.vy += go.firework!.ay
+    go.transform!.y += go.firework!.vy
+  } else {
+    gos.delete(go)
+  }
+}
+
+function spawnFireworks() {
+  const color = Math.random() < .5 ? "firebrick" : "white"
+  const x = Math.random() * canvas.width
+  const y = (Math.random() ** 2) * canvas.height
+  for (let i = 0; i < 10; i++) {
+    const go: GameObject = {
+      firework: {
+        life: Math.random() * 1000,
+        color,
+        ax: (Math.random() - .5) * .05,
+        ay: Math.random() * -.05,
+        vx: 0,
+        vy: 0
+      },
+      transform: {
+        x,
+        y,
+        width: 10,
+        height: 10
+      }
+    }
+    gos.add(go)
+  }
+  setTimeout(spawnFireworks, Math.random() * 400)
 }
 
 function updateGrab(go: GameObject) {
@@ -411,6 +479,7 @@ function render() {
 
   renderSlots()
   renderCards()
+  renderFireworks()
   // renderMouse()
 }
 
@@ -488,6 +557,18 @@ function renderCard(go: GameObject) {
     ctx.textBaseline = "middle"
     ctx.textAlign = "center"
     ctx.fillText(largeSuitChar, x, y)
+  }
+}
+
+function renderFireworks() {
+  for (const go of gos.values()) {
+    if (go.firework) {
+      const { x, y, width, height } = go.transform!
+      ctx.strokeStyle = "black"
+      ctx.strokeRect(x - width / 2, y - height / 2, width - width / 2, height - height / 2)
+      ctx.fillStyle = go.firework.color
+      ctx.fillRect(x - width / 2, y - height / 2, width - width / 2, height - height / 2)
+    }
   }
 }
 
