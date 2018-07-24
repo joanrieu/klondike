@@ -15,3 +15,6 @@ The goal is to sort each suit independently in increasing order in the foundatio
 
 ## Winning game
 ![Winning game](https://i.imgur.com/uesYPv4.png)
+
+## Fireworks!
+![Fireworks](https://i.imgur.com/2v4ns4L.png)
