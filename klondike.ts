@@ -202,7 +202,7 @@ const ctx = canvas.getContext("2d")!
 
 // UPDATE
 
-setInterval(function update() {
+function update() {
   for (const go of gos.values()) {
     if (go.grab)
       updateGrab(go)
@@ -213,7 +213,7 @@ setInterval(function update() {
     if (go.card)
       updateCard(go)
   }
-}, 13)
+}
 
 function updateCard(go: GameObject) {
   if (go.stack) {
@@ -406,15 +406,13 @@ function isRedCard(card: GameObject) {
 
 // RENDER
 
-requestAnimationFrame(function render() {
+function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   renderSlots()
   renderCards()
   // renderMouse()
-
-  requestAnimationFrame(render)
-})
+}
 
 function renderCards() {
   const sortedCards = [...gos.values()]
@@ -527,3 +525,11 @@ function renderSlot(go: GameObject) {
   ctx.strokeStyle = "#CCC"
   ctx.strokeRect(x - halfwidth, y - halfheight, width, height)
 }
+
+// RUN
+
+requestAnimationFrame(function run() {
+  update()
+  render()
+  requestAnimationFrame(run)
+})
