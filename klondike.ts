@@ -256,7 +256,7 @@ function updateFireworks() {
 }
 
 function updateFirework(go: GameObject) {
-  if (go.firework!.life--) {
+  if (go.firework!.life-- > 0) {
     // gravity
     go.firework!.ay += 0.001
 
