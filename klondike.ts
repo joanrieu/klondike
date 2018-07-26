@@ -477,10 +477,20 @@ function isRedCard(card: GameObject) {
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+  renderTitle()
   renderSlots()
   renderCards()
   renderFireworks()
   // renderMouse()
+}
+
+function renderTitle() {
+  ctx.font = "60px serif"
+  ctx.fillStyle = "green"
+  ctx.textAlign = "center"
+  ctx.textBaseline = "alphabetic"
+  ctx.fillText("Klondike", canvas.width * .5, canvas.height * .95)
+  ctx.fillText("____", canvas.width * .5, canvas.height * .96)
 }
 
 function renderCards() {
