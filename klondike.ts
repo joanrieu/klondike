@@ -53,6 +53,7 @@ interface GameObject {
 const gos = new Set<GameObject>()
 const canvas = document.getElementsByTagName("canvas")[0]
 const ctx = canvas.getContext("2d")!
+const OFFSCREEN = -1000
 
 // create cards
 {
@@ -65,8 +66,8 @@ const ctx = canvas.getContext("2d")!
           faceUp: false
         },
         transform: {
-          x: -Infinity,
-          y: -Infinity,
+          x: OFFSCREEN,
+          y: OFFSCREEN,
           width: 100,
           height: 150
         }
@@ -165,8 +166,8 @@ const ctx = canvas.getContext("2d")!
       targets: {}
     },
     transform: {
-      x: -Infinity,
-      y: -Infinity,
+      x: OFFSCREEN,
+      y: OFFSCREEN,
       width: 1,
       height: 1
     }
@@ -486,7 +487,7 @@ function render() {
 
 function renderTitle() {
   ctx.font = "60px serif"
-  ctx.fillStyle = "green"
+  ctx.fillStyle = "darkgrey"
   ctx.textAlign = "center"
   ctx.textBaseline = "alphabetic"
   ctx.fillText("Klondike", canvas.width * .5, canvas.height * .95)
@@ -515,11 +516,18 @@ function renderCard(go: GameObject) {
   const { x, y, width, height } = go.transform!
   const halfwidth = width / 2, halfheight = height / 2
 
-  ctx.fillStyle = faceUp ? "white" : "#EEE";
-  ctx.fillRect(x - halfwidth, y - halfheight, width, height)
+  if (faceUp)
+    ctx.fillStyle = "white"
+  else {
+    const gradient = ctx.createLinearGradient(-halfwidth, -halfheight / 2, halfwidth, halfheight / 2)
+    gradient.addColorStop(0, "#CCC")
+    gradient.addColorStop(1, "#EEE")
+    ctx.fillStyle = gradient
+  }
 
-  ctx.strokeStyle = "#CCC"
-  ctx.strokeRect(x - halfwidth, y - halfheight, width, height)
+  ctx.strokeStyle = "#555"
+
+  makeRectangle(x, y, halfwidth, halfheight, () => (ctx.stroke(), ctx.fill()))
 
   if (faceUp) {
     // color
@@ -570,6 +578,31 @@ function renderCard(go: GameObject) {
   }
 }
 
+function makeRectangle(x: number, y: number, halfwidth: number, halfheight: number, callback: () => void) {
+  const radius = 15
+
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.save()
+
+  ctx.moveTo(-halfwidth + radius, -halfheight)
+  ctx.lineTo(halfwidth - radius, -halfheight)
+  ctx.quadraticCurveTo(halfwidth, -halfheight, halfwidth, -halfheight + radius)
+  ctx.lineTo(halfwidth, halfheight - radius)
+  ctx.quadraticCurveTo(halfwidth, halfheight, halfwidth - radius, halfheight)
+  ctx.lineTo(-halfwidth + radius, halfheight)
+  ctx.quadraticCurveTo(-halfwidth, halfheight, -halfwidth, halfheight - radius)
+  ctx.lineTo(-halfwidth, -halfheight + radius)
+  ctx.quadraticCurveTo(-halfwidth, -halfheight, -halfwidth + radius, -halfheight)
+  ctx.closePath()
+
+  callback()
+
+  ctx.restore()
+  ctx.restore()
+  ctx.beginPath()
+}
+
 function renderFireworks() {
   for (const go of gos.values()) {
     if (go.firework) {
@@ -614,7 +647,7 @@ function renderSlot(go: GameObject) {
   const halfwidth = width / 2, halfheight = height / 2
 
   ctx.strokeStyle = "#CCC"
-  ctx.strokeRect(x - halfwidth, y - halfheight, width, height)
+  makeRectangle(x, y, halfwidth, halfheight, () => ctx.stroke())
 }
 
 // RUN
