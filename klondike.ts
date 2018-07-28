@@ -361,6 +361,7 @@ function updateMouse(go: GameObject) {
             previous: stockCard,
             spaced: false
           }
+          updateCard(discardedCard)
           stockCard = discardedCard
           discardedCard = previous
         }
